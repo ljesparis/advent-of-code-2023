@@ -11,27 +11,31 @@ fn parse_numbers(input: &str) -> impl Iterator<Item = i64> + '_ {
     })
 }
 
+fn build_sequences(unparsed_numbers: &str) -> Vec<Vec<i64>> {
+    let mut sequence = parse_numbers(unparsed_numbers).collect::<Vec<i64>>();
+    let mut sequences = Vec::new();
+    sequences.push(sequence.clone());
+
+    loop {
+        sequence = sequence
+            .windows(2)
+            .map(|chunk| chunk[1] - chunk[0])
+            .collect::<Vec<i64>>();
+
+        sequences.push(sequence.clone());
+        if sequence.iter().all(|&el| el == 0) {
+            break;
+        }
+    }
+
+    sequences
+}
+
 fn get_total_extrapolated_values(input: &str) -> i64 {
     input
         .lines()
         .map(|line| {
-            let mut sequence = parse_numbers(line).collect::<Vec<i64>>();
-            let mut sequences = Vec::new();
-            sequences.push(sequence.clone());
-
-            loop {
-                sequence = sequence
-                    .windows(2)
-                    .map(|chunk| chunk[1] - chunk[0])
-                    .collect::<Vec<i64>>();
-
-                sequences.push(sequence.clone());
-                if sequence.iter().all(|&el| el == 0) {
-                    break;
-                }
-            }
-
-            sequences
+            build_sequences(line)
                 .iter()
                 .map(|sequence| sequence[sequence.len() - 1] as i64)
                 .sum::<i64>()
@@ -43,27 +47,15 @@ fn get_total_extrapolated_values_backwards(input: &str) -> i64 {
     input
         .lines()
         .map(|line| {
-            let mut sequence = parse_numbers(line).collect::<Vec<i64>>();
-            let mut sequences = Vec::new();
-            sequences.push(sequence.clone());
-
-            loop {
-                sequence = sequence
-                    .windows(2)
-                    .map(|chunk| chunk[1] - chunk[0])
-                    .collect::<Vec<i64>>();
-
-                sequences.push(sequence.clone());
-                if sequence.iter().all(|&el| el == 0) {
-                    break;
-                }
-            }
-
             let mut result: i64 = 0;
-            for el in sequences.iter().rev().map(|sequence| sequence[0]) {
+            for el in build_sequences(line)
+                .iter()
+                .rev()
+                .map(|sequence| sequence[0])
+            {
                 result = el - result;
             }
-            
+
             result
         })
         .sum::<i64>()
